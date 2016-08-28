@@ -1,0 +1,24 @@
+{
+  "name": "svg-join",
+  "version": "1.0.0",
+  "description": "Join svg files in symbol collection.",
+  "main": "svg-join.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Klimentiy Yudinstev",
+  "bin": {
+    "svg-join": "./bin/svg-join"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "glob": "^7.0.5",
+    "xmldoc": "^0.5.1",
+    "yargs": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Climenty/svg-join.git"
+  },
+  "license": "MIT"
+}
