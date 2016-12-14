@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict'
 
+/* eslint "object-property-newline": 0 */
+/* eslint "camelcase": 0 */
+
 const Promise = require('bluebird')
 const fs = Promise.promisifyAll(require('fs'))
 const glob = Promise.promisifyAll(require('glob'))
@@ -28,6 +31,10 @@ function equals (src, trg) {
 function deletelike (obj, filter) {
   if (!Array.isArray(filter)) filter = Object.keys(filter)
   filter.forEach(x => delete obj[x])
+}
+
+function CSS_escape (str) {
+  return str.replace(/([!#$%&()*+,.\\/;<=>?@[\]^`{|}~])/g, '\\$1').replace(/:/g, '\\3A ')
 }
 
 function style_keys (str) {
@@ -59,9 +66,9 @@ const argv = require('yargs')
     'o': { alias: 'output', type: 'string', default: '.',
       describe: 'the output directory' },
     'n': { alias: 'name', type: 'string', default: 'svg-bundle',
-        describe: 'file name (without ext.) for bundles (SVG & CSS)' },
+      describe: 'file name (without ext.) for bundles (SVG & CSS)' },
     'cssName': { type: 'string',
-        describe: 'file name (with ext.) for CSS bundle (if different)' },
+      describe: 'file name (with ext.) for CSS bundle (if different)' },
     'p': { alias: 'prefix', type: 'string', default: 'svg_',
       describe: 'prefix for CSS selectors' },
     'm': { alias: 'mono', type: 'boolean', default: false,
@@ -142,8 +149,8 @@ glob.globAsync(argv.source, { nocase: true }).filter(x => x !== svgout).map(fnam
         Object.keys(doc.attr).forEach(x => {
           if (!preserve.has(x.toLowerCase())) delete doc.attr[x]
         })
-        doc.attr.id = path.basename(fname, path.extname(fname)).replace(/\s/g, '_')
-        rule.name = argv.prefix + doc.attr.id
+        doc.attr.id = path.basename(fname, path.extname(fname)).replace(/\s/g, '_').replace(/['"]/g, '')
+        rule.name = argv.prefix + CSS_escape(doc.attr.id)
 
         if (argv.mono) {
           const styled_children = doc.children.filter(x => {
