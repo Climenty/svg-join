@@ -106,74 +106,78 @@ let total = 0
 let processed = 0
 const file = fs.createWriteStream(svgout, { defaultEncoding: encoding })
 file.writeAsync(header)
-glob.globAsync(argv.source, { nocase: true }).filter(x => x !== svgout).map(fname => {
-  total++
-  return fs.readFileAsync(fname, encoding)
-    .then(body => {
-      try {
-        const doc = new xmldoc.XmlDocument(body)
-        if (doc.name.toLowerCase() !== 'svg') {
-          throw new Error('Error! The root element must be SVG.')
-        }
+glob.globAsync(argv.source, { nocase: true }).filter(x => x !== svgout).then(async fnames => {
+  fnames = fnames.sort();
+  for(let i = 0; i < fnames.length; i++) {
+    const fname = fnames[i];
+    total++
+    await fs.readFileAsync(fname, encoding)
+      .then(body => {
+        try {
+          const doc = new xmldoc.XmlDocument(body)
+          if (doc.name.toLowerCase() !== 'svg') {
+            throw new Error('Error! The root element must be SVG.')
+          }
 
-        let width = 'auto'
-        let height = 'auto'
-        if (doc.attr.viewBox) {
-          let vbox = doc.attr.viewBox.split(/\s+/)
-          if (vbox.length === 4) {
-            width = +vbox[2] - vbox[0]
-            height = +vbox[3] - vbox[1]
+          let width = 'auto'
+          let height = 'auto'
+          if (doc.attr.viewBox) {
+            let vbox = doc.attr.viewBox.split(/\s+/)
+            if (vbox.length === 4) {
+              width = +vbox[2] - vbox[0]
+              height = +vbox[3] - vbox[1]
 
-            if (argv.calcSide) {
-              let w = parseFloat(doc.attr.width)
-              let wu = parseUnit(doc.attr.width)
-              let h = parseFloat(doc.attr.height)
-              let hu = parseUnit(doc.attr.height)
-              if (!!w && units.has(wu) && !h) {
-                h = height / width * w
-                h = round.has(wu) ? Math.round(h) : h.toFixed(4)
-                doc.attr.height = h + wu
-              } else if (!!h && units.has(hu) && !w) {
-                w = width / height * h
-                w = round.has(hu) ? Math.round(w) : w.toFixed(4)
-                doc.attr.width = w + hu
+              if (argv.calcSide) {
+                let w = parseFloat(doc.attr.width)
+                let wu = parseUnit(doc.attr.width)
+                let h = parseFloat(doc.attr.height)
+                let hu = parseUnit(doc.attr.height)
+                if (!!w && units.has(wu) && !h) {
+                  h = height / width * w
+                  h = round.has(wu) ? Math.round(h) : h.toFixed(4)
+                  doc.attr.height = h + wu
+                } else if (!!h && units.has(hu) && !w) {
+                  w = width / height * h
+                  w = round.has(hu) ? Math.round(w) : w.toFixed(4)
+                  doc.attr.width = w + hu
+                }
               }
             }
           }
-        }
-        const rule = {
-          attr: { width: addPX(doc.attr.width || width), height: addPX(doc.attr.height || height) }
-        }
-
-        doc.name = 'symbol'
-        Object.keys(doc.attr).forEach(x => {
-          if (!preserve.has(x.toLowerCase())) delete doc.attr[x]
-        })
-        doc.attr.id = path.basename(fname, path.extname(fname)).replace(/\s/g, '_').replace(/['"]/g, '')
-        rule.name = argv.prefix + CSS_escape(doc.attr.id)
-
-        if (argv.mono) {
-          const styled_children = doc.children.filter(x => {
-            let keys = Object.keys(x.attr)
-            if (x.attr.style) keys = keys.concat(style_keys(x.attr.style))
-            return keys.some(y => presentation.has(y))
-          })
-          if (styled_children.length === 1) {
-            Object.keys(styled_children[0].attr).filter(x => presentation.has(x)).forEach(y => {
-              rule.attr[y] = styled_children[0].attr[y]
-              delete styled_children[0].attr[y]
-            })
+          const rule = {
+            attr: { width: addPX(doc.attr.width || width), height: addPX(doc.attr.height || height) }
           }
-        }
 
-        symbols.push(rule)
-        processed++
-        return file.writeAsync(doc.toString({ compressed: true }) + '\n')
-      } catch (e) {
-        errOut(fname, e.message)
-      }
-    })
-    .error(e => console.error(e.message))
+          doc.name = 'symbol'
+          Object.keys(doc.attr).forEach(x => {
+            if (!preserve.has(x.toLowerCase())) delete doc.attr[x]
+          })
+          doc.attr.id = path.basename(fname, path.extname(fname)).replace(/\s/g, '_').replace(/['"]/g, '')
+          rule.name = argv.prefix + CSS_escape(doc.attr.id)
+
+          if (argv.mono) {
+            const styled_children = doc.children.filter(x => {
+              let keys = Object.keys(x.attr)
+              if (x.attr.style) keys = keys.concat(style_keys(x.attr.style))
+              return keys.some(y => presentation.has(y))
+            })
+            if (styled_children.length === 1) {
+              Object.keys(styled_children[0].attr).filter(x => presentation.has(x)).forEach(y => {
+                rule.attr[y] = styled_children[0].attr[y]
+                delete styled_children[0].attr[y]
+              })
+            }
+          }
+
+          symbols.push(rule)
+          processed++
+          return file.writeAsync(doc.toString({ compressed: true }) + '\n')
+        } catch (e) {
+          errOut(fname, e.message)
+        }
+      })
+      .error(e => console.error(e.message))
+  }
 })
 .then(() => {
   file.end('</svg>')
