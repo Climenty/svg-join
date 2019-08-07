@@ -1,3 +1,5 @@
+**Fork of https://github.com/Climenty/svg-join, modified to have consistent results with sorted assets**
+
 # SVG-Join
 
 There are webpack or gulp solutions for combining SVG. But I could not find simple CLI version. Here it is. It just join SVG files in symbol collection with CSS description.
