@@ -27,5 +27,8 @@
     "type": "git",
     "url": "git+https://github.com/TeliaSoneraNorge/svg-join"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  }
 }
