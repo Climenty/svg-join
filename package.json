@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "fs-extra": "^8.1.0",
+    "glob": "^7.1.6",
     "glob-promise": "^3.4.0",
     "xmldoc": "^0.5.1",
     "yargs": "^6.5.0"
@@ -30,5 +31,8 @@
   "license": "MIT",
   "devDependencies": {
     "prettier": "^1.19.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }
