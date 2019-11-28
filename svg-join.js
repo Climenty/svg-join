@@ -4,9 +4,8 @@
 /* eslint "object-property-newline": 0 */
 /* eslint "camelcase": 0 */
 
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
-const glob = Promise.promisifyAll(require('glob'));
+const fs = require('fs-extra');
+const glob = require('glob-promise');
 const xmldoc = require('xmldoc');
 const path = require('path');
 

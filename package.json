@@ -11,8 +11,8 @@
     "svg-join": "./bin/svg-join"
   },
   "dependencies": {
-    "bluebird": "^3.4.1",
-    "glob": "^7.0.5",
+    "fs-extra": "^8.1.0",
+    "glob-promise": "^3.4.0",
     "xmldoc": "^0.5.1",
     "yargs": "^6.5.0"
   },
