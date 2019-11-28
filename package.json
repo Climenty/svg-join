@@ -1,6 +1,6 @@
 {
   "name": "@telia/svg-join",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Join svg files in symbol collection. Fork of https://github.com/Climenty/svg-join, modified to have consistent results with sorted assets",
   "main": "svg-join.js",
   "scripts": {
