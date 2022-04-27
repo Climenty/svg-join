@@ -1,20 +1,20 @@
 {
   "name": "svg-join",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Join svg files in symbol collection.",
   "main": "svg-join.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "upgi": "yarn upgrade-interactive --latest"
   },
   "author": "Klimentiy Yudintsev",
   "bin": {
     "svg-join": "./bin/svg-join"
   },
   "dependencies": {
-    "bluebird": "^3.4.1",
-    "glob": "^7.0.5",
-    "xmldoc": "^0.5.1",
-    "yargs": "^6.5.0"
+    "fast-glob": "^3.2.11",
+    "xmldoc": "^1.1.2",
+    "yargs": "^17.4.1"
   },
   "keywords": [
     "generator",

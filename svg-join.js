@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 'use strict'
 
-/* eslint "object-property-newline": 0 */
-/* eslint "camelcase": 0 */
-
-const Promise = require('bluebird')
-const fs = Promise.promisifyAll(require('fs'))
-const glob = Promise.promisifyAll(require('glob'))
+const fsp = require('fs').promises
+const glob = require('fast-glob')
 const xmldoc = require('xmldoc')
 const path = require('path')
 
@@ -101,15 +97,20 @@ const presentation = new Set(['alignment-baseline', 'baseline-shift', 'clip', 'c
 const units = new Set(['em', 'rem', 'px'])
 const round = new Set(['px'])
 const encoding = 'utf8'
-let symbols = []
-let total = 0
-let processed = 0
-const file = fs.createWriteStream(svgout, { defaultEncoding: encoding })
-file.writeAsync(header)
-glob.globAsync(argv.source, { nocase: true }).filter(x => x !== svgout).map(fname => {
-  total++
-  return fs.readFileAsync(fname, encoding)
-    .then(body => {
+asyncMain()
+
+async function asyncMain () {
+  let symbols = []
+  let total = 0
+  let processed = 0
+  let file
+  try {
+    file = await fsp.open(svgout, 'w')
+    await file.write(header)
+    const list = (await glob(argv.source, { caseSensitiveMatch: false })).filter(x => x !== svgout)
+    for (const fname of list) {
+      total++
+      const body = await fsp.readFile(fname, encoding)
       try {
         const doc = new xmldoc.XmlDocument(body)
         if (doc.name.toLowerCase() !== 'svg') {
@@ -168,40 +169,42 @@ glob.globAsync(argv.source, { nocase: true }).filter(x => x !== svgout).map(fnam
 
         symbols.push(rule)
         processed++
-        return file.writeAsync(doc.toString({ compressed: true }) + '\n')
-      } catch (e) {
-        errOut(fname, e.message)
+        await file.write(doc.toString({ compressed: true }) + '\n')
+      } catch (err) {
+        errOut(fname, err.message)
       }
-    })
-    .error(e => console.error(e.message))
-})
-.then(() => {
-  file.end('</svg>')
-  // create and optimize css
-  let style = ''
-  const wh = ['width', 'height']
-  symbols.forEach((symb, index) => {
-    if (Object.keys(symb.attr).length === 0) return
-    const rest_symbols = symbols.slice(index)
-    let attrs = Object.assign({}, symb.attr)
-    let same_size = rest_symbols.filter(x => lookslike(attrs, x.attr, wh))
-    let same_style = rest_symbols.filter(x => lookslike(attrs, x.attr))
-    if (same_size.length > same_style.length) {
-      same_size = same_size.map(x => {
-        deletelike(x.attr, wh)
-        return x.name
-      })
-      let { width, height } = attrs
-      style += style_format(same_size, { width, height })
-      if (Object.keys(symb.attr).length > 0) {
-        attrs = Object.assign({}, symb.attr)
-        same_style = rest_symbols.filter(x => equals(attrs, x.attr))
+    }
+    await file.write('</svg>')
+    // create and optimize css
+    let style = ''
+    const wh = ['width', 'height']
+    symbols.forEach((symb, index) => {
+      if (Object.keys(symb.attr).length === 0) return
+      const rest_symbols = symbols.slice(index)
+      let attrs = Object.assign({}, symb.attr)
+      let same_size = rest_symbols.filter(x => lookslike(attrs, x.attr, wh))
+      let same_style = rest_symbols.filter(x => lookslike(attrs, x.attr))
+      if (same_size.length > same_style.length) {
+        same_size = same_size.map(x => {
+          deletelike(x.attr, wh)
+          return x.name
+        })
+        let { width, height } = attrs
+        style += style_format(same_size, { width, height })
+        if (Object.keys(symb.attr).length > 0) {
+          attrs = Object.assign({}, symb.attr)
+          same_style = rest_symbols.filter(x => equals(attrs, x.attr))
+          style += wipe_style_format(same_style, attrs)
+        }
+      } else {
         style += wipe_style_format(same_style, attrs)
       }
-    } else {
-      style += wipe_style_format(same_style, attrs)
-    }
-  })
-  fs.writeFileAsync(cssout, style, encoding)
-    .then(() => console.log(`Successfully processed files: ${processed}/${total}.`))
-})
+    })
+    await fsp.writeFile(cssout, style, encoding)
+    console.log(`Successfully processed files: ${processed}/${total}.`)
+  } catch (err) {
+    console.error(err.message)
+  } finally {
+    await file.close()
+  }
+}
