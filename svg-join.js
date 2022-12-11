@@ -155,6 +155,9 @@ async function asyncMain () {
 
         if (argv.mono) {
           const styled_children = doc.children.filter(x => {
+            if (!x.attr) {
+              return false;
+            }
             let keys = Object.keys(x.attr)
             if (x.attr.style) keys = keys.concat(style_keys(x.attr.style))
             return keys.some(y => presentation.has(y))
