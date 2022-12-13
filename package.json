@@ -1,6 +1,6 @@
 {
   "name": "svg-join",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Join svg files in symbol collection.",
   "main": "svg-join.js",
   "scripts": {
