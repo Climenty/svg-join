@@ -67,6 +67,7 @@ const argv = require('yargs')
       describe: 'file name (with ext.) for CSS bundle (if different)' },
     'p': { alias: 'prefix', type: 'string', default: 'svg_',
       describe: 'prefix for CSS selectors' },
+    'symbolPrefix': { type: 'string', describe: 'prefix for SVG symbol IDs' },
     'm': { alias: 'mono', type: 'boolean', default: false,
       describe: 'extract presentation attributes from single-styled SVG to CSS' },
     'calcSide': { type: 'boolean', default: false,
@@ -76,6 +77,8 @@ const argv = require('yargs')
     'Will create mybundle.svg and mybundle.css in public folder.')
   .example('svg-join -s "/your/path/**/*.svg"',
     'Find SVG files in subfolders.')
+  .example('svg-join -s "/your/path/**/*.svg" --symbolPrefix icon-',
+    'Find SVG files in subfolders and prefix all SVG symbol IDs with icon-.')
   .strict()
   .argv
 
@@ -150,7 +153,7 @@ async function asyncMain () {
         Object.keys(doc.attr).forEach(x => {
           if (!preserve.has(x.toLowerCase())) delete doc.attr[x]
         })
-        doc.attr.id = path.basename(fname, path.extname(fname)).replace(/\s/g, '_').replace(/['"]/g, '')
+        doc.attr.id = argv.symbolPrefix + path.basename(fname, path.extname(fname)).replace(/\s/g, '_').replace(/['"]/g, '')
         rule.name = argv.prefix + CSS_escape(doc.attr.id)
 
         if (argv.mono) {
